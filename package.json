@@ -1,0 +1,39 @@
+{
+  "name": "mcp-learn",
+  "version": "1.0.0",
+  "description": "Learning project for Model Context Protocol (MCP) with weather and notes functionality",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "weather-server": "tsx src/servers/weather-server.ts",
+    "notes-server": "tsx src/servers/notes-server.ts",
+    "agent": "tsx src/agent/cli.ts",
+    "examples": "tsx src/examples/usage-examples.ts",
+    "demo": "tsx src/examples/demo.ts"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "weather",
+    "notes",
+    "ai-agent"
+  ],
+  "author": "Learning Project",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.0"
+  }
+}
