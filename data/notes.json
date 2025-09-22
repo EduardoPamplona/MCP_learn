@@ -1,0 +1,29 @@
+[
+  {
+    "id": "mfokbj0bm777hmfojl",
+    "title": "my meeting with John tomorrow at 3 PM",
+    "content": "my meeting with John tomorrow at 3 PM",
+    "createdAt": "2025-09-17T22:37:43.547Z",
+    "updatedAt": "2025-09-17T22:37:43.547Z",
+    "tags": []
+  },
+  {
+    "id": "mfokbjuyofodck8pfq",
+    "title": "Direct API Example",
+    "content": "This note was saved using the MCP API directly",
+    "createdAt": "2025-09-17T22:37:44.650Z",
+    "updatedAt": "2025-09-17T22:37:44.650Z",
+    "tags": [
+      "example",
+      "api"
+    ]
+  },
+  {
+    "id": "mfokd42c2p1yaf5smhx",
+    "title": "buying groceries: milk, bread, eggs",
+    "content": "buying groceries: milk, bread, eggs",
+    "createdAt": "2025-09-17T22:38:57.492Z",
+    "updatedAt": "2025-09-17T22:38:57.492Z",
+    "tags": []
+  }
+]
