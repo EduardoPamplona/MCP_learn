@@ -27,7 +27,7 @@ export interface AgentResponse {
  * Intent classification for user requests
  */
 interface Intent {
-  type: 'weather' | 'notes' | 'help' | 'unknown';
+  type: 'weather' | 'notes' | 'gmail' | 'help' | 'unknown';
   confidence: number;
   entities: Record<string, any>;
 }
@@ -73,6 +73,9 @@ export class AIAgent {
         
         case 'notes':
           return await this.handleNotesRequest(userInput, intent);
+        
+        case 'gmail':
+          return await this.handleGmailRequest(userInput, intent);
         
         case 'help':
           return this.handleHelpRequest();
@@ -125,6 +128,24 @@ export class AIAgent {
       /find.*note/i,
     ];
 
+    // Gmail patterns
+    const gmailPatterns = [
+      /email/i,
+      /gmail/i,
+      /send.*mail/i,
+      /send.*email/i,
+      /compose/i,
+      /delete.*email/i,
+      /delete.*mail/i,
+      /list.*emails/i,
+      /show.*emails/i,
+      /my emails/i,
+      /inbox/i,
+      /unread.*emails/i,
+      /check.*email/i,
+      /mail/i,
+    ];
+
     // Help patterns
     const helpPatterns = [
       /help/i,
@@ -154,6 +175,18 @@ export class AIAgent {
           type: 'notes',
           confidence: 0.8,
           entities: noteData,
+        };
+      }
+    }
+
+    // Check for gmail intent
+    for (const pattern of gmailPatterns) {
+      if (pattern.test(lowercaseInput)) {
+        const emailData = this.extractEmailData(input);
+        return {
+          type: 'gmail',
+          confidence: 0.8,
+          entities: emailData,
         };
       }
     }
@@ -216,6 +249,70 @@ export class AIAgent {
       return { action: 'get' };
     }
 
+    return { action: 'list' };
+  }
+
+  /**
+   * Extract email data from Gmail requests
+   */
+  private extractEmailData(input: string): { action: string; to?: string[]; subject?: string; body?: string; messageId?: string; query?: string } {
+    const lowercaseInput = input.toLowerCase();
+    
+    if (lowercaseInput.includes('delete') || lowercaseInput.includes('remove')) {
+      // Extract message ID if provided
+      const idMatch = input.match(/(?:id|message)\s*[:\s]+([a-zA-Z0-9]+)/i);
+      return { 
+        action: 'delete', 
+        messageId: idMatch ? idMatch[1] : ''
+      };
+    }
+    
+    if (lowercaseInput.includes('list') || lowercaseInput.includes('show') || lowercaseInput.includes('check') || lowercaseInput.includes('inbox')) {
+      // Extract search parameters
+      let query = '';
+      if (lowercaseInput.includes('unread')) {
+        query = 'is:unread';
+      } else if (lowercaseInput.includes('from')) {
+        const fromMatch = input.match(/from\s+([^\s]+)/i);
+        if (fromMatch) query = `from:${fromMatch[1]}`;
+      }
+      
+      return { action: 'list', query };
+    }
+    
+    if (lowercaseInput.includes('send') || lowercaseInput.includes('compose') || lowercaseInput.includes('email')) {
+      // Extract recipient email addresses
+      const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/g;
+      const emails = input.match(emailPattern) || [];
+      
+      // Extract subject (look for patterns like "subject:", "about", "regarding")
+      const subjectMatch = input.match(/(?:subject:|about|regarding)\s*(.+?)(?:\s+to|\s+body|$)/i);
+      let subject = subjectMatch ? subjectMatch[1].trim() : '';
+      
+      // Extract body content
+      const bodyMatch = input.match(/(?:body:|message:|content:|saying?)\s*(.+)$/i);
+      let body = bodyMatch ? bodyMatch[1].trim() : '';
+      
+      // If no explicit body found, use everything after email addresses as body
+      if (!body && emails.length > 0) {
+        const lastEmail = emails[emails.length - 1];
+        const afterEmailIndex = input.lastIndexOf(lastEmail) + lastEmail.length;
+        const remainingText = input.substring(afterEmailIndex).trim();
+        if (remainingText && !subject) {
+          subject = remainingText;
+        } else if (remainingText && subject) {
+          body = remainingText;
+        }
+      }
+      
+      return { 
+        action: 'send', 
+        to: emails.length > 0 ? emails : [], 
+        subject: subject || 'Message from MCP Assistant',
+        body: body || input
+      };
+    }
+    
     return { action: 'list' };
   }
 
@@ -312,6 +409,98 @@ export class AIAgent {
   }
 
   /**
+   * Handle Gmail-related requests
+   */
+  private async handleGmailRequest(input: string, intent: Intent): Promise<AgentResponse> {
+    const { action, to, subject, body, messageId, query } = intent.entities;
+    
+    try {
+      let result: CallToolResult;
+      let toolUsed: string;
+
+      switch (action) {
+        case 'send':
+          if (!to || to.length === 0) {
+            return {
+              content: 'To send an email, please provide at least one recipient email address. For example: "Send an email to john@example.com about the meeting"',
+              toolsUsed: [],
+              success: false,
+              error: 'Missing recipient email',
+            };
+          }
+          result = await this.mcpHost.callTool('gmail.sendEmail', { 
+            to, 
+            subject: subject || 'Message from MCP Assistant', 
+            body: body || input 
+          });
+          toolUsed = 'sendEmail';
+          break;
+
+        case 'delete':
+          if (!messageId) {
+            return {
+              content: 'To delete an email, please provide the message ID. For example: "Delete email with ID abc123"',
+              toolsUsed: [],
+              success: false,
+              error: 'Missing message ID',
+            };
+          }
+          result = await this.mcpHost.callTool('gmail.deleteEmail', { messageId });
+          toolUsed = 'deleteEmail';
+          break;
+
+        case 'list':
+        default:
+          const listParams: any = { maxResults: 10 };
+          if (query) {
+            listParams.query = query;
+          }
+          result = await this.mcpHost.callTool('gmail.listEmails', listParams);
+          toolUsed = 'listEmails';
+          break;
+      }
+
+      const responseContent = result.content
+        ?.map(c => c.type === 'text' ? c.text : '')
+        .join('\n') || 'No response from Gmail server';
+
+      return {
+        content: responseContent,
+        toolsUsed: [toolUsed],
+        success: true,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Provide helpful error messages for common Gmail issues
+      if (errorMessage.includes('authentication') || errorMessage.includes('setup')) {
+        return {
+          content: `Gmail authentication is not set up. Please run the Gmail setup first:
+
+🔐 **Setup Instructions:**
+1. Go to Google Cloud Console (https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Gmail API
+4. Create OAuth 2.0 credentials
+5. Use the setupGmailAuth tool with your credentials
+
+For detailed instructions, please refer to the Gmail MCP documentation.`,
+          toolsUsed: [],
+          success: false,
+          error: errorMessage,
+        };
+      }
+      
+      return {
+        content: `Sorry, I couldn't process your Gmail request. ${errorMessage}`,
+        toolsUsed: [],
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
    * Handle help requests
    */
   private handleHelpRequest(): AgentResponse {
@@ -330,12 +519,19 @@ I can help you with the following:
    • "Remember that I need to buy groceries"
    • "Show me my notes"
 
+📧 **Gmail Management**
+   • "Show me my latest emails"
+   • "Send an email to john@example.com about the meeting"
+   • "List unread emails"
+   • "Delete email with ID abc123"
+
 🔧 **Available Tools:**
 ${this.availableTools.map(tool => `   • ${tool.name}: ${tool.description}`).join('\n')}
 
 💡 **Tips:**
    • Be specific with locations for weather requests
    • For notes, include both what you want to remember and a clear title
+   • For Gmail, set up authentication first using setupGmailAuth
    • I can manage multiple notes and help you organize them
 
 Type your request naturally - I'll understand what you want to do!`;
@@ -356,6 +552,7 @@ Type your request naturally - I'll understand what you want to do!`;
 
 🌤️  Weather information - try "What's the weather in [location]?"
 📝 Note management - try "Save a note about..." or "List my notes"
+📧 Gmail management - try "Show my emails" or "Send email to..."
 ❓ Help - type "help" to see all available commands
 
 Please rephrase your request, or type "help" for more information.`,

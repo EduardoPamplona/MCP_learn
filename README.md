@@ -1,12 +1,13 @@
 # MCP Learning Assistant
 
-A comprehensive learning project demonstrating the **Model Context Protocol (MCP)** by building an AI agent that connects to weather and notes services.
+A comprehensive learning project demonstrating the **Model Context Protocol (MCP)** by building an AI agent that connects to weather, notes, and Gmail services.
 
 ## 🎯 Project Overview
 
 This project implements an AI agent that uses MCP to provide:
 - 🌤️ **Weather Information** - Real-time weather data for any location
 - 📝 **Personal Notes Management** - Save, retrieve, and organize personal notes
+- 📧 **Gmail Integration** - List, send, and delete emails through Gmail API
 - 🤖 **Natural Language Interface** - Interact using plain English commands
 
 ## 🏗️ Architecture
@@ -24,17 +25,18 @@ This project implements an AI agent that uses MCP to provide:
                          │ Processing   │               │
                          └──────────────┘               │
                                                         │
-                    ┌───────────────────────────────────┴───────────────────────────────────┐
-                    │                                                                       │
-            ┌───────▼────────┐                                                    ┌────────▼─────────┐
-            │ Weather Server │                                                    │  Notes Server    │
-            │ (MCP)          │                                                    │  (MCP)           │
-            │                │                                                    │                  │
-            │ Tools:         │                                                    │ Tools:           │
-            │ • getWeather   │                                                    │ • saveNote       │
-            └────────────────┘                                                    │ • listNotes      │
-                                                                                  │ • getNoteById    │
-                                                                                  └──────────────────┘
+           ┌────────────────────────────────────────────┴────────────────────────────────────┐
+           │                                                                                  │
+   ┌───────▼────────┐                 ┌────────▼─────────┐                 ┌────────▼─────────┐
+   │ Weather Server │                 │  Notes Server    │                 │  Gmail Server    │
+   │ (MCP)          │                 │  (MCP)           │                 │  (MCP)           │
+   │                │                 │                  │                 │                  │
+   │ Tools:         │                 │ Tools:           │                 │ Tools:           │
+   │ • getWeather   │                 │ • saveNote       │                 │ • listEmails     │
+   └────────────────┘                 │ • listNotes      │                 │ • sendEmail      │
+                                      │ • getNoteById    │                 │ • deleteEmail    │
+                                      └──────────────────┘                 │ • setupGmailAuth │
+                                                                           └──────────────────┘
 ```
 
 ## 🚀 Quick Start
@@ -87,6 +89,17 @@ You: Save a note about my dentist appointment tomorrow at 2 PM
 📋 Title: Dentist appointment
 🏷️  Tags: None
 📅 Created: 1/15/2024, 10:30:45 AM
+
+You: Show me my latest emails
+🤖 Assistant: 📧 Gmail Messages (5 found):
+
+1. 📩 Project Update Meeting
+   From: boss@company.com
+   To: you@email.com
+   Date: Mon, 15 Jan 2024 09:15:23 GMT
+   ID: 1a2b3c4d5e6f
+   Preview: Hi team, let's schedule our weekly project review...
+   Labels: INBOX, IMPORTANT
 ```
 
 #### Single Commands
@@ -125,13 +138,34 @@ Located at `src/servers/notes-server.ts`
 - Full-text note content
 - Metadata tracking (created/updated dates)
 
+### Gmail Server
+Located at `src/servers/gmail-server.ts`
+
+**Tools:**
+- `listEmails(maxResults?: number, query?: string, labelIds?: string[])` - List emails with filtering
+- `sendEmail(to: string[], subject: string, body: string, cc?: string[], bcc?: string[])` - Send emails
+- `deleteEmail(messageId: string)` - Delete an email by ID
+- `setupGmailAuth(clientId: string, clientSecret: string)` - Configure OAuth authentication
+
+**Features:**
+- OAuth 2.0 authentication with Google
+- Full Gmail API integration
+- Secure credential management
+- Support for email filtering and search
+- CC/BCC support for sending emails
+
+**Setup Required:**
+- Google Cloud Project with Gmail API enabled
+- OAuth 2.0 credentials
+- See [Gmail Setup Guide](docs/gmail-setup.md) for detailed instructions
+
 ## 🧠 AI Agent
 
 The AI Agent (`src/agent/ai-agent.ts`) provides:
 
 ### Intent Classification
 - Natural language understanding using pattern matching
-- Context extraction (locations, note content, etc.)
+- Context extraction (locations, note content, email data, etc.)
 - Confidence scoring
 
 ### Request Routing
@@ -144,6 +178,12 @@ The AI Agent (`src/agent/ai-agent.ts`) provides:
 - Tool usage transparency
 - Error explanations
 
+### Supported Intents
+- **Weather**: Location-based weather queries
+- **Notes**: Note creation, listing, and retrieval
+- **Gmail**: Email listing, sending, and deletion
+- **Help**: Command assistance and tool discovery
+
 ## 🔧 Development
 
 ### Project Structure
@@ -155,9 +195,13 @@ src/
 │   └── mcp-host.ts      # MCP server connection manager
 ├── servers/
 │   ├── weather-server.ts # Weather MCP server
-│   └── notes-server.ts   # Notes MCP server
+│   ├── notes-server.ts   # Notes MCP server
+│   └── gmail-server.ts   # Gmail MCP server
 ├── shared/
 │   └── config.ts        # Shared configuration and types
+├── examples/
+│   ├── usage-examples.ts # General usage examples
+│   └── gmail-examples.ts # Gmail-specific examples
 └── index.ts             # Main entry point
 ```
 
@@ -169,6 +213,9 @@ npm run start        # Start compiled version
 npm run agent        # Start CLI interface
 npm run weather-server # Start weather server only
 npm run notes-server   # Start notes server only
+npm run gmail-server   # Start Gmail server only
+npm run examples     # Run general usage examples
+npm run gmail-examples # Run Gmail-specific examples
 ```
 
 ### Testing the Servers
@@ -300,7 +347,9 @@ Replace the rule-based intent classifier in `ai-agent.ts` with:
 - Database queries
 - API integrations
 - Calendar management
-- Email functionality
+- Email functionality ✅ (Gmail integration completed)
+- Slack/Teams messaging
+- Social media posting
 
 ## 📖 Additional Resources
 

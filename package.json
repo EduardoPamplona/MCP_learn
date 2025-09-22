@@ -10,8 +10,10 @@
     "start": "node dist/index.js",
     "weather-server": "tsx src/servers/weather-server.ts",
     "notes-server": "tsx src/servers/notes-server.ts",
+    "gmail-server": "tsx src/servers/gmail-server.ts",
     "agent": "tsx src/agent/cli.ts",
     "examples": "tsx src/examples/usage-examples.ts",
+    "gmail-examples": "tsx src/examples/gmail-examples.ts",
     "demo": "tsx src/examples/demo.ts"
   },
   "keywords": [
@@ -25,7 +27,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.17",
     "tsx": "^4.6.0",
     "typescript": "^5.3.0"
   },
@@ -34,6 +36,7 @@
     "axios": "^1.6.0",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
+    "googleapis": "^160.0.0",
     "inquirer": "^9.2.0"
   }
 }

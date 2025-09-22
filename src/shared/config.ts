@@ -26,6 +26,11 @@ export const MCP_SERVERS: Record<string, MCPServerConfig> = {
     command: 'tsx',
     args: ['src/servers/notes-server.ts'],
   },
+  gmail: {
+    name: 'gmail-server',
+    command: 'tsx',
+    args: ['src/servers/gmail-server.ts'],
+  },
 };
 
 /**
@@ -43,20 +48,22 @@ export interface AgentConfig {
  */
 export const DEFAULT_AGENT_CONFIG: AgentConfig = {
   name: 'MCP Learning Assistant',
-  description: 'An AI assistant that can help with weather information and note management using MCP',
-  systemPrompt: `You are a helpful AI assistant with access to weather information and personal note management capabilities through the Model Context Protocol (MCP).
+  description: 'An AI assistant that can help with weather information, note management, and Gmail operations using MCP',
+  systemPrompt: `You are a helpful AI assistant with access to weather information, personal note management, and Gmail capabilities through the Model Context Protocol (MCP).
 
 Available tools:
 - Weather: Use getWeather to fetch current weather information for any location
 - Notes: Use saveNote to save personal notes, listNotes to view all notes, and getNoteById to retrieve specific notes
+- Gmail: Use listEmails to view emails, sendEmail to send messages, deleteEmail to remove emails, and setupGmailAuth for initial setup
 
 When users ask about weather, use the getWeather tool with the location they specify.
 When users want to save information, use the saveNote tool with an appropriate title and content.
 When users want to see their notes, use listNotes to show all notes or getNoteById for specific notes.
+When users want to manage emails, use the Gmail tools - listEmails for viewing, sendEmail for composing, and deleteEmail for removal.
 
 Always be helpful, informative, and explain what you're doing when using these tools.
 Format responses in a clear, user-friendly way.`,
-  mcpServers: ['weather', 'notes'],
+  mcpServers: ['weather', 'notes', 'gmail'],
 };
 
 /**
@@ -85,6 +92,16 @@ export const CLI_COMMANDS: CLICommand[] = [
       'Save a note about my meeting tomorrow',
       'List all my notes',
       'Show me my shopping list note',
+    ],
+  },
+  {
+    name: 'gmail',
+    description: 'Manage Gmail emails',
+    examples: [
+      'Show me my latest emails',
+      'Send an email to john@example.com',
+      'Delete the email with ID abc123',
+      'List unread emails',
     ],
   },
   {
