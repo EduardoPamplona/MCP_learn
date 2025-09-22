@@ -25,5 +25,24 @@
     "createdAt": "2025-09-17T22:38:57.492Z",
     "updatedAt": "2025-09-17T22:38:57.492Z",
     "tags": []
+  },
+  {
+    "id": "mfvqhth6oy3ykpqt0in",
+    "title": "my meeting with John tomorrow at 3 PM",
+    "content": "my meeting with John tomorrow at 3 PM",
+    "createdAt": "2025-09-22T23:04:57.978Z",
+    "updatedAt": "2025-09-22T23:04:57.978Z",
+    "tags": []
+  },
+  {
+    "id": "mfvqhui60yu3cpw1ttg",
+    "title": "Direct API Example",
+    "content": "This note was saved using the MCP API directly",
+    "createdAt": "2025-09-22T23:04:59.310Z",
+    "updatedAt": "2025-09-22T23:04:59.310Z",
+    "tags": [
+      "example",
+      "api"
+    ]
   }
 ]
